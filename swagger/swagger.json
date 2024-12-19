@@ -74,7 +74,7 @@
           }
         }
       },
-      "/booking-service/bookings/nic/{nic}": {
+      "/booking-service/bookings/{nic}": {
         "get": {
           "summary": "Get a booking by NIC",
           "tags": ["Booking"],
@@ -110,7 +110,7 @@
           }
         }
       },
-      "/booking-service/bookings/tripId/{tripId}": {
+      "/booking-service/bookings/{tripId}": {
         "get": {
           "summary": "Get bookings by tripId",
           "tags": ["Booking"],

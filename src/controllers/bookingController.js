@@ -1,6 +1,5 @@
-// Ensure axios is imported
-const axios = require('axios');
-const Booking = require('../models/bookingModel');  // Import the Booking model
+const axios = require('axios'); // Ensure axios is imported
+const Booking = require('../models/bookingModel'); // Import the Booking model
 
 // Function to create a new booking
 const createBooking = async (req, res) => {
@@ -93,7 +92,6 @@ const createBooking = async (req, res) => {
   }
 };
 
-
 // Function to update payment status (from 'PENDING' to 'SUCCESS')
 const updatePaymentStatus = async (req, res) => {
   const { bookingId } = req.body;  // Assuming you send bookingId in the request body
@@ -105,22 +103,22 @@ const updatePaymentStatus = async (req, res) => {
 
   try {
     // Find the booking by bookingId
-    const booking = await Booking.findOne({ bookingId });
+    const booking1 = await Booking.findOne({ bookingId });
 
-    if (!booking) {
+    if (!booking1) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     // Check if payment is already marked as 'SUCCESS'
-    if (booking.paymentStatus === 'SUCCESS') {
+    if (booking1.paymentStatus === 'SUCCESS') {
       return res.status(400).json({ message: 'Payment status is already SUCCESS' });
     }
 
-    // Mock the payment process and update payment status to 'SUCCESS'
-    booking.paymentStatus = 'SUCCESS';
+    // Update payment status to 'SUCCESS'
+    booking1.paymentStatus = 'SUCCESS';
 
     // Fetch the trip details from the Trip Service
-    const tripResponse = await axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`);
+    const tripResponse = await axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking1.tripId}`);
 
     if (tripResponse.status !== 200) {
       return res.status(404).json({ message: 'Trip not found' });
@@ -129,7 +127,7 @@ const updatePaymentStatus = async (req, res) => {
     const tripData = tripResponse.data;
 
     // Mark the seat as confirmed and update available seats
-    const seatNumber = parseInt(booking.seatNumber); // Ensure seat number is an integer
+    const seatNumber = parseInt(booking1.seatNumber); // Ensure seat number is an integer
     if (tripData.availableSeats.includes(seatNumber)) {
       // Add to confirmed seats
       tripData.confirmedSeats.push(seatNumber);
@@ -138,18 +136,18 @@ const updatePaymentStatus = async (req, res) => {
       tripData.availableSeats = tripData.availableSeats.filter(seat => seat !== seatNumber);
 
       // Save the updated trip data
-      await axios.put(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`, tripData);
+      await axios.put(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking1.tripId}`, tripData);
     } else {
       return res.status(400).json({ message: 'Seat not available for booking' });
     }
 
     // Save the updated booking
-    await booking.save();
+    await booking1.save();
 
     // Return success response
     res.status(200).json({
       message: 'Payment successful and booking confirmed',
-      booking,
+      booking1,
       trip: tripData
     });
 
@@ -175,11 +173,11 @@ const getBookingByNic = async (req, res) => {
   const { nic } = req.params;
 
   try {
-    const booking = await Booking.findOne({ nic });
-    if (!booking) {
+    const bookingnic = await Booking.findOne({ nic });
+    if (!bookingnic) {
       return res.status(404).json({ message: 'Booking not found for this NIC' });
     }
-    res.status(200).json(booking);
+    res.status(200).json(bookingnic);
   } catch (error) {
     console.error('Error fetching booking by NIC:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
