@@ -1,0 +1,309 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Booking Service API",
+      "description": "API for managing bookings in the booking service system.",
+      "version": "1.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:8084",
+        "description": "Local Development Server"
+      },
+      {
+        "url": "https://api.bookingservice.bussewaya.online",
+        "description": "Production Server"
+      }
+    ],
+    "paths": {
+      "/booking-service/bookings": {
+        "post": {
+          "summary": "Create a new booking",
+          "tags": ["Booking"],
+          "operationId": "createBooking",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Booking created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Required fields missing or invalid"
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        },
+        "get": {
+          "summary": "Get all bookings",
+          "tags": ["Booking"],
+          "operationId": "getAllBookings",
+          "responses": {
+            "200": {
+              "description": "List of bookings",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Booking"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error"
+            }
+          }
+        }
+      },
+      "/booking-service/bookings/nic/{nic}": {
+        "get": {
+          "summary": "Get a booking by NIC",
+          "tags": ["Booking"],
+          "operationId": "getBookingByNic",
+          "parameters": [
+            {
+              "name": "nic",
+              "in": "path",
+              "required": true,
+              "description": "NIC of the commuter",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Booking details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Booking not found"
+            },
+            "500": {
+              "description": "Server error"
+            }
+          }
+        }
+      },
+      "/booking-service/bookings/tripId/{tripId}": {
+        "get": {
+          "summary": "Get bookings by tripId",
+          "tags": ["Booking"],
+          "operationId": "getBookingsByTripId",
+          "parameters": [
+            {
+              "name": "tripId",
+              "in": "path",
+              "required": true,
+              "description": "Trip ID to retrieve bookings for",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of bookings for the given trip",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Booking"
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "No bookings found for this tripId"
+            },
+            "500": {
+              "description": "Server error"
+            }
+          }
+        }
+      },
+      "/booking-service/bookings/payment": {
+        "patch": {
+          "summary": "Update payment status (mock payment success)",
+          "tags": ["Booking"],
+          "operationId": "updatePaymentStatus",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bookingId": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["bookingId"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Payment status updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid bookingId or payment status already SUCCESS"
+            },
+            "404": {
+              "description": "Booking or Trip not found"
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Booking": {
+          "type": "object",
+          "properties": {
+            "bookingId": {
+              "type": "number"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "commuterId": {
+              "type": "number"
+            },
+            "commuterName": {
+              "type": "string"
+            },
+            "commuterEmail": {
+              "type": "string"
+            },
+            "nic": {
+              "type": "string"
+            },
+            "seatNumber": {
+              "type": "string"
+            },
+            "tripId": {
+              "type": "number"
+            },
+            "tripNumber": {
+              "type": "string"
+            },
+            "tripDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "routeNumber": {
+              "type": "string"
+            },
+            "routeName": {
+              "type": "string"
+            },
+            "startLocation": {
+              "type": "string"
+            },
+            "endLocation": {
+              "type": "string"
+            },
+            "scheduleId": {
+              "type": "number"
+            },
+            "departureTime": {
+              "type": "string"
+            },
+            "arrivalTime": {
+              "type": "string"
+            },
+            "permitNumber": {
+              "type": "string"
+            },
+            "vehicleNumber": {
+              "type": "string"
+            },
+            "busType": {
+              "type": "string"
+            },
+            "pricePerSeat": {
+              "type": "number"
+            },
+            "music": {
+              "type": "boolean"
+            },
+            "ac": {
+              "type": "boolean"
+            },
+            "paymentStatus": {
+              "type": "string",
+              "enum": ["PENDING", "SUCCESS"],
+              "default": "PENDING"
+            }
+          },
+          "required": [
+            "bookingId",
+            "commuterId",
+            "commuterName",
+            "commuterEmail",
+            "nic",
+            "seatNumber",
+            "tripId",
+            "tripNumber",
+            "tripDate",
+            "routeNumber",
+            "routeName",
+            "startLocation",
+            "endLocation",
+            "scheduleId",
+            "departureTime",
+            "arrivalTime",
+            "permitNumber",
+            "vehicleNumber",
+            "busType",
+            "pricePerSeat",
+            "music",
+            "ac",
+            "paymentStatus"
+          ]
+        }
+      }
+    }
+  }
+  
+  
