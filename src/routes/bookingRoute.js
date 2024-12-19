@@ -15,10 +15,10 @@ router.post('/bookings', createBooking);
 router.get('/bookings', getAllBookings);
 
 // Route to get a booking by NIC
-router.get('/bookings/nic/:nic', getBookingByNic);
+router.get('/bookings/:nic', getBookingByNic);
 
 // Route to get bookings by tripId
-router.get('/bookings/tripId/:tripId', getBookingsByTripId);
+router.get('/bookings/:tripId', getBookingsByTripId);
 
 // Route to update payment status (mock payment success)
 router.patch('/bookings/payment', updatePaymentStatus);

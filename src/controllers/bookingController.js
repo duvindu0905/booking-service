@@ -1,3 +1,4 @@
+// Ensure axios is imported
 const axios = require('axios');
 const Booking = require('../models/bookingModel');  // Import the Booking model
 
@@ -22,25 +23,20 @@ const createBooking = async (req, res) => {
   }
 
   try {
-    // URLs for route, schedule, and permit services based on environment
-    const routeServiceUrl = process.env.NODE_ENV === 'production'
-      ? process.env.ROUTE_SERVICE_URL_PRODUCTION
-      : process.env.ROUTE_SERVICE_URL_LOCAL;
+    const tripIdNumber = parseInt(tripId);  // Ensure tripId is a number
+    if (isNaN(tripIdNumber)) {
+      return res.status(400).json({ message: 'Invalid tripId' });
+    }
 
-    const scheduleServiceUrl = process.env.NODE_ENV === 'production'
-      ? process.env.SCHEDULE_SERVICE_URL_PRODUCTION
-      : process.env.SCHEDULE_SERVICE_URL_LOCAL;
-
-    const permitServiceUrl = process.env.NODE_ENV === 'production'
-      ? process.env.PERMIT_SERVICE_URL_PRODUCTION
-      : process.env.PERMIT_SERVICE_URL_LOCAL;
+    // Dynamically set the Trip Service URL with the tripId
+    const tripServiceUrl = `${process.env.TRIP_SERVICE_URL_LOCAL}${tripIdNumber}`;
 
     // Fetch data for route, schedule, and permit
     const [routeResponse, scheduleResponse, permitResponse, tripResponse] = await Promise.all([
-      axios.get(`${routeServiceUrl}/${routeNumber}`), 
-      axios.get(`${scheduleServiceUrl}/${scheduleId}`),
-      axios.get(`${permitServiceUrl}/${permitNumber}`),
-      axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${tripId}`),  // Fetch trip details from the trip service
+      axios.get(`${process.env.ROUTE_SERVICE_URL_LOCAL}/${routeNumber}`),
+      axios.get(`${process.env.SCHEDULE_SERVICE_URL_LOCAL}/${scheduleId}`),
+      axios.get(`${process.env.PERMIT_SERVICE_URL_LOCAL}/${permitNumber}`),
+      axios.get(tripServiceUrl), // Get trip data with tripId
     ]);
 
     // Validate responses
@@ -70,9 +66,9 @@ const createBooking = async (req, res) => {
       nic,
       seatNumber,
       routeNumber, // Add routeNumber from user input
-      tripId,
-      tripNumber: scheduleData.tripNumber,
-      tripDate: scheduleData.tripDate,
+      tripId: tripIdNumber,
+      tripNumber: tripData.tripNumber, // Get tripNumber from the tripData
+      tripDate: tripData.tripDate, // Get tripDate from the tripData
       startLocation: routeData.startLocation,
       endLocation: routeData.endLocation,
       scheduleId,
@@ -96,6 +92,7 @@ const createBooking = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 // Function to update payment status (from 'PENDING' to 'SUCCESS')
 const updatePaymentStatus = async (req, res) => {
