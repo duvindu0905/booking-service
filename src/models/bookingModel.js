@@ -7,6 +7,7 @@ const bookingSchema = new mongoose.Schema({
   commuterName: { type: String, required: true },  // Name of the commuter
   commuterEmail: { type: String, required: true },  // Email of the commuter
   nic: { type: String, required: true },  // NIC of the commuter
+  mobileNumber: { type: Number, required: true },  // Mobile number of the commuter
   seatNumber: { type: String, required: true },  // Seat number booked
   routeNumber: { type: String, required: true },  // Route number for the trip
   tripId: { type: Number, required: true },  // The trip the booking is associated with (references trip)
