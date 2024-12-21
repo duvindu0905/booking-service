@@ -30,7 +30,7 @@ const createBooking = async (req, res) => {
     }
 
     // Dynamically set the Trip Service URL with the tripId
-    const tripServiceUrl = `${process.env.TRIP_SERVICE_URL_LOCAL}${tripIdNumber}`;
+    const tripServiceUrl = `${process.env.TRIP_SERVICE_URL_LOCAL}/${tripIdNumber}`;
 
     // Fetch data for route, schedule, and permit
     const [routeResponse, scheduleResponse, permitResponse, tripResponse] = await Promise.all([
@@ -99,7 +99,7 @@ const createBooking = async (req, res) => {
 
     // Sending the commuter data to commuterService API
     try {
-      const commuterServiceUrl = `${process.env.COMMUTER_SERVICE_URL}/commuters`; // Update this URL as per your commuter service endpoint
+      const commuterServiceUrl = `${process.env.COMMUTER_SERVICE_URL}`; // Update this URL as per your commuter service endpoint
       const commuterResponse = await axios.post(commuterServiceUrl, commuterData);
 
       if (commuterResponse.status === 201) {
@@ -119,70 +119,80 @@ const createBooking = async (req, res) => {
   }
 };
 
-// Function to update payment status (from 'PENDING' to 'SUCCESS')
+// Update the payment status and confirm the seat
 const updatePaymentStatus = async (req, res) => {
-  const { bookingId } = req.body;  // Assuming you send bookingId in the request body
-
-  // Validate required fields
-  if (!bookingId) {
-    return res.status(400).json({ message: 'Booking ID is required' });
-  }
-
-  try {
-    // Find the booking by bookingId
-    const booking = await Booking.findOne({ bookingId });
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
+    const { bookingId } = req.body;  // Booking ID from request body
+  
+    // Validate the bookingId
+    if (!bookingId) {
+      return res.status(400).json({ message: 'Booking ID is required' });
     }
-
-    // Check if payment is already marked as 'SUCCESS'
-    if (booking.paymentStatus === 'SUCCESS') {
-      return res.status(400).json({ message: 'Payment status is already SUCCESS' });
-    }
-
-    // Update payment status to 'SUCCESS'
-    booking.paymentStatus = 'SUCCESS';
-
-    // Fetch the trip details from the Trip Service
-    const tripResponse = await axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`);
-
-    if (tripResponse.status !== 200) {
-      return res.status(404).json({ message: 'Trip not found' });
-    }
-
-    const tripData = tripResponse.data;
-
-    // Mark the seat as confirmed and update available seats
-    const seatNumber = parseInt(booking.seatNumber); // Ensure seat number is an integer
-    if (tripData.availableSeats.includes(seatNumber)) {
-      // Add to confirmed seats
+  
+    try {
+      // Find the booking by bookingId
+      const booking = await Booking.findOne({ bookingId });
+  
+      if (!booking) {
+        return res.status(404).json({ message: 'Booking not found' });
+      }
+  
+      // Check if payment status is already SUCCESS
+      if (booking.paymentStatus === 'SUCCESS') {
+        return res.status(400).json({ message: 'Payment status is already SUCCESS' });
+      }
+  
+      // Update the payment status to 'SUCCESS'
+      booking.paymentStatus = 'SUCCESS';
+      await booking.save();  // Save the updated payment status
+  
+      // Fetch the trip details based on the tripId from the booking
+      const tripResponse = await axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`);
+  
+      if (tripResponse.status !== 200) {
+        return res.status(404).json({ message: 'Trip not found' });
+      }
+  
+      const tripData = tripResponse.data;
+  
+      // Ensure the seat number is valid and available
+      const seatNumber = parseInt(booking.seatNumber);
+      if (!tripData.availableSeats.includes(seatNumber)) {
+        return res.status(400).json({ message: `Seat ${seatNumber} is not available for booking` });
+      }
+  
+      // Mark the seat as confirmed
       tripData.confirmedSeats.push(seatNumber);
-
-      // Remove from available seats
-      tripData.availableSeats = tripData.availableSeats.filter(seat => seat !== seatNumber);
-
-      // Save the updated trip data
-      await axios.put(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`, tripData);
-    } else {
-      return res.status(400).json({ message: 'Seat not available for booking' });
+      tripData.availableSeats = tripData.availableSeats.filter(seat => seat !== seatNumber);  // Remove from availableSeats
+  
+      // Save the updated trip data with confirmed seat
+      const patchResponse = await axios.patch(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`, {
+        confirmedSeats: tripData.confirmedSeats,
+        availableSeats: tripData.availableSeats
+      });
+  
+      // Ensure the PATCH request was successful
+      if (patchResponse.status !== 200) {
+        return res.status(500).json({ message: 'Failed to update trip data' });
+      }
+  
+      // Return success response
+      res.status(200).json({
+        message: 'Payment successful and seat confirmed',
+        booking: booking,
+        trip: tripData
+      });
+  
+    } catch (error) {
+      console.error('Error updating payment status:', error.message);
+      res.status(500).json({
+        message: 'Server error',
+        error: error.message
+      });
     }
-
-    // Save the updated booking
-    await booking.save();
-
-    // Return success response
-    res.status(200).json({
-      message: 'Payment successful and booking confirmed',
-      booking,
-      trip: tripData
-    });
-
-  } catch (error) {
-    console.error('Error updating payment status:', error.message);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
+  };
+  
+  
+  
 
 // Get all bookings
 const getAllBookings = async (req, res) => {
@@ -197,35 +207,37 @@ const getAllBookings = async (req, res) => {
 
 // Get a booking by NIC
 const getBookingByNic = async (req, res) => {
-  const { nic } = req.params;
-
-  try {
-    const booking = await Booking.findOne({ nic });
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found for this NIC' });
+    const { nic } = req.params;
+  
+    try {
+      const bookingnic = await Booking.findOne({ nic });
+      if (!bookingnic) {
+        return res.status(404).json({ message: 'Booking not found for this NIC' });
+      }
+      res.status(200).json(bookingnic);
+    } catch (error) {
+      console.error('Error fetching booking by NIC:', error.message);
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
-    res.status(200).json(booking);
-  } catch (error) {
-    console.error('Error fetching booking by NIC:', error.message);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Get bookings by tripId
-const getBookingsByTripId = async (req, res) => {
-  const { tripId } = req.params;
-
-  try {
-    const bookings = await Booking.find({ tripId });
-    if (!bookings.length) {
-      return res.status(404).json({ message: 'No bookings found for this tripId' });
+  };
+  
+  // Get bookings by tripId
+  const getBookingsByTripId = async (req, res) => {
+    const { tripId } = req.params;
+  
+    try {
+      const bookings = await Booking.find({ tripId });
+      if (!bookings.length) {
+        return res.status(404).json({ message: 'No bookings found for this tripId' });
+      }
+      res.status(200).json(bookings);
+    } catch (error) {
+      console.error('Error fetching bookings by tripId:', error.message);
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
-    res.status(200).json(bookings);
-  } catch (error) {
-    console.error('Error fetching bookings by tripId:', error.message);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
+  };
+  
+  
 
 module.exports = {
   createBooking,
