@@ -5,6 +5,6 @@ Api for booking service
 
 url: https://api.bookingservice.bussewaya.online
 
-example: https://api.bookingservice.bussewaya.online/bookings
+example: https://api.bookingservice.bussewaya.online/booking-service/bookings
 
 swagger url: https://api.bookingservice.bussewaya.online/api-docs/#/
