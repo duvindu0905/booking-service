@@ -1,0 +1,46 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Authenticate with Google Cloud
+      - name: Set up Google Cloud authentication
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      # Step 3: Configure Google Cloud project
+      - name: Configure Google Cloud
+        run: |
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud config set run/region us-central1
+
+      # Step 4: Deploy to Cloud Run
+      - name: Deploy booking-service to Cloud Run
+        run: |
+          gcloud run deploy booking-service \
+            --source . \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars=MONGO_URI_BOOKING=${{ secrets.MONGO_URI_BOOKING }},\
+            ROUTE_SERVICE_URL_LOCAL=http://localhost:8080/route-service/routes,\
+            ROUTE_SERVICE_URL_PRODUCTION=https://api.routeservice.bussewaya.online/route-service/routes,\
+            PERMIT_SERVICE_URL_LOCAL=http://localhost:8081/permit-service/permits,\
+            PERMIT_SERVICE_URL_PRODUCTION=https://api.permitservice.bussewaya.online/permit-service/permits,\
+            SCHEDULE_SERVICE_URL_LOCAL=http://localhost:8082/schedule-service/schedules,\
+            SCHEDULE_SERVICE_URL_PRODUCTION=https://api.scheduleservice.bussewaya.online/schedule-service/schedules,\
+            TRIP_SERVICE_URL_LOCAL=http://localhost:8083/trip-service/trips,\
+            TRIP_SERVICE_URL_PRODUCTION=https://api.tripservice.bussewaya.online/trip-service/trips,\
+            COMMUTER_SERVICE_URL=http://localhost:8085/commuter-service/commuters,\
+            COMMUTER_SERVICE_URL_PRODUCTION=https://api.commuterservice.bussewaya.online/commuter-service/commuters
