@@ -1,3 +1,4 @@
+// bookingRoute.js
 const express = require('express');
 const router = express.Router();
 const {
@@ -14,15 +15,12 @@ router.post('/bookings', createBooking);
 // Route to get all bookings
 router.get('/bookings', getAllBookings);
 
-// Route to get a booking by NIC
-router.get('/bookings/:nic', getBookingByNic); // This will now correctly match "/bookings/nic/{nic}"
+  
+router.get('/bookings/nic/:nic', getBookingByNic);
 
-// Route to get bookings by tripId
-router.get('/bookings/:tripId', getBookingsByTripId); // This will now correctly match "/bookings/tripId/{tripId}"
+router.get('/bookings/tripId/:tripId', getBookingsByTripId);
 
 // Route to update payment status (mock payment success)
 router.patch('/bookings/payment', updatePaymentStatus);
 
 module.exports = router;
-
-
