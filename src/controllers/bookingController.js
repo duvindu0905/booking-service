@@ -144,32 +144,13 @@ const updatePaymentStatus = async (req, res) => {
       // Update the payment status to 'SUCCESS'
       booking.paymentStatus = 'SUCCESS';
       await booking.save();  // Save the updated payment status
-  
-      // Fetch the trip details based on the tripId from the booking
-      const tripResponse = await axios.get(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`);
-  
-      if (tripResponse.status !== 200) {
-        return res.status(404).json({ message: 'Trip not found' });
-      }
-  
-      const tripData = tripResponse.data;
-  
-      // Ensure the seat number is valid and available
-      const seatNumber = parseInt(booking.seatNumber);
-      if (!tripData.availableSeats.includes(seatNumber)) {
-        return res.status(400).json({ message: `Seat ${seatNumber} is not available for booking` });
-      }
-  
-      // Mark the seat as confirmed
-      tripData.confirmedSeats.push(seatNumber);
-      tripData.availableSeats = tripData.availableSeats.filter(seat => seat !== seatNumber);  // Remove from availableSeats
-  
-      // Save the updated trip data with confirmed seat
-      const patchResponse = await axios.patch(`${process.env.TRIP_SERVICE_URL_LOCAL}/${booking.tripId}`, {
-        confirmedSeats: tripData.confirmedSeats,
-        availableSeats: tripData.availableSeats
+
+      //Change the booking payment status
+      const url = process.env.TRIP_SERVICE_URL_CONFIRM_SEAT.replace("VAR_TRIP_ID",booking.tripId);
+      const patchResponse = await axios.patch(url, {
+        seatNumber: booking.seatNumber,
       });
-  
+
       // Ensure the PATCH request was successful
       if (patchResponse.status !== 200) {
         return res.status(500).json({ message: 'Failed to update trip data' });
@@ -178,8 +159,7 @@ const updatePaymentStatus = async (req, res) => {
       // Return success response
       res.status(200).json({
         message: 'Payment successful and seat confirmed',
-        booking: booking,
-        trip: tripData
+        booking: booking
       });
   
     } catch (error) {
