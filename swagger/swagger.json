@@ -16,7 +16,7 @@
       }
     ],
     "paths": {
-      "/bookings": {
+      "/booking-service/bookings": {
         "post": {
           "summary": "Create a new booking",
           "tags": ["Booking"],
@@ -74,7 +74,7 @@
           }
         }
       },
-      "/bookings/nic/{nic}": {
+      "/booking-service/bookings/nic/{nic}": {
         "get": {
           "summary": "Get a booking by NIC",
           "tags": ["Booking"],
@@ -110,7 +110,7 @@
           }
         }
       },
-      "/bookings/tripId/{tripId}": {
+      "/booking-service/bookings/tripId/{tripId}": {
         "get": {
           "summary": "Get bookings by tripId",
           "tags": ["Booking"],
@@ -149,7 +149,7 @@
           }
         }
       },
-      "/bookings/payment": {
+      "/booking-service/bookings/payment": {
         "patch": {
           "summary": "Update payment status (mock payment success)",
           "tags": ["Booking"],
@@ -168,27 +168,27 @@
                   "required": ["bookingId"]
                 }
               }
-            },
-            "responses": {
-              "200": {
-                "description": "Payment status updated successfully",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "$ref": "#/components/schemas/Booking"
-                    }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Payment status updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Booking"
                   }
                 }
-              },
-              "400": {
-                "description": "Invalid bookingId or payment status already SUCCESS"
-              },
-              "404": {
-                "description": "Booking or Trip not found"
-              },
-              "500": {
-                "description": "Internal Server Error"
               }
+            },
+            "400": {
+              "description": "Invalid bookingId or payment status already SUCCESS"
+            },
+            "404": {
+              "description": "Booking or Trip not found"
+            },
+            "500": {
+              "description": "Internal Server Error"
             }
           }
         }
@@ -216,6 +216,9 @@
               "type": "string"
             },
             "nic": {
+              "type": "string"
+            },
+            "mobileNumber": {
               "type": "string"
             },
             "seatNumber": {
@@ -282,6 +285,7 @@
             "commuterName",
             "commuterEmail",
             "nic",
+            "mobileNumber",
             "seatNumber",
             "tripId",
             "tripNumber",
