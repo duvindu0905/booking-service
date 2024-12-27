@@ -3,8 +3,6 @@ nibm index - YR3COBSCCOMP232P-007
 
 Api for booking service 
 
-url: https://api.bookingservice.bussewaya.online
+url: https://booking-service-193893744076.us-central1.run.app/booking-service/bookings
 
-example: https://api.bookingservice.bussewaya.online/booking-service/bookings
-
-swagger url: https://api.bookingservice.bussewaya.online/api-docs/#/
+swagger url: https://booking-service-193893744076.us-central1.run.app/api-docs/#/
